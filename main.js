@@ -41,14 +41,19 @@ async function processFile(filePath) {
                 });
             }
 
-            if ((line.includes('add') || line.includes('subtract')) && usingSystem) {
+            if ((line.includes('add') || line.includes('minus')) && usingSystem) {
                 const wordsInLine = extractWordsFromLine(line);
                 const operation = wordsInLine[0];
                 const operand1 = isNaN(wordsInLine[1]) ? variables[wordsInLine[1]] : parseFloat(wordsInLine[1]);
                 const operand2 = isNaN(wordsInLine[2]) ? variables[wordsInLine[2]] : parseFloat(wordsInLine[2]);
                 const result = performOperation(operation, operand1, operand2);
                 console.log(`Result of ${operation} operation: ${result}`);
-            }
+            
+                if (line.trim().endsWith('=')) {
+                    variables[wordsInLine[1]] = result;
+                    console.log(`Updated var ${wordsInLine[1]} = ${result}`);
+                }
+            }            
 
             if (line.includes('var') && usingSystem) {
                 processVarDeclaration(line);
@@ -103,7 +108,7 @@ function performOperation(operation, operand1, operand2) {
     switch (operation) {
         case 'add':
             return operand1 + operand2;
-        case 'subtract':
+        case 'minus':
             return operand1 - operand2;
         default:
             console.log(`Unsupported operation: ${operation}`);
