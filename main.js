@@ -2,17 +2,13 @@ const fs = require('fs');
 const readline = require('readline');
 
 function extractWordsFromLine(line) {
-    // Split the line into individual words using whitespace characters
     const words = line.split(/\s+/);
-
-    // Filter out any empty strings
     const filteredWords = words.filter(word => word.length > 0);
-
     return filteredWords;
 }
 
-let variables = {}; // Store variable names and their values
-let usingSystem = false
+let variables = {};
+let usingSystem = false;
 let usingSystemExtras = false;
 
 async function processFile(filePath) {
@@ -20,7 +16,7 @@ async function processFile(filePath) {
         const fileStream = fs.createReadStream(filePath);
         const rl = readline.createInterface({
             input: fileStream,
-            crlfDelay: Infinity, // Read entire lines
+            crlfDelay: Infinity,
         });
 
         for await (const line of rl) {
@@ -45,31 +41,38 @@ async function processFile(filePath) {
                 });
             }
 
+            if ((line.includes('add') || line.includes('subtract')) && usingSystem) {
+                const wordsInLine = extractWordsFromLine(line);
+                const operation = wordsInLine[0];
+                const operand1 = isNaN(wordsInLine[1]) ? variables[wordsInLine[1]] : parseFloat(wordsInLine[1]);
+                const operand2 = isNaN(wordsInLine[2]) ? variables[wordsInLine[2]] : parseFloat(wordsInLine[2]);
+                const result = performOperation(operation, operand1, operand2);
+                console.log(`Result of ${operation} operation: ${result}`);
+            }
+
             if (line.includes('var') && usingSystem) {
                 processVarDeclaration(line);
             }
 
-            if (line.includes('vijay') && usingSystemExtras) {
-                console.log("Vijay is a Great Person");
-            }
-
-            if (line.includes('using System')) {
+            if (line.includes('using System') && usingSystem == false) {
                 usingSystem = true;
-                console.log(filePath + ' is using system');
+                console.log(filePath + ' is using System');
             }
 
             if (line.includes('using System.Extras')) {
                 usingSystemExtras = true;
-                console.log(filePath + ' is using system extras');
+                console.log(filePath + ' is using System.Extras');
             }
 
-            // Stop searching the line when a semicolon is encountered
             if (line.includes(';') && usingSystem) {
                 break;
             }
         }
 
         console.log('Finished processing the file.');
+        if (usingSystem == false && usingSystemExtras == false) {
+            console.log(filePath + " Is not using System and System.Extras please add the proper usings at the top of your file");
+        }
     } catch (error) {
         console.error('Error reading the file:', error.message);
     }
@@ -88,7 +91,7 @@ function processVarDeclaration(line) {
         varIndices.forEach(varIndex => {
             if (varIndex < wordsInLine.length - 1) {
                 const varName = wordsInLine[varIndex + 1];
-                const value = wordsInLine[varIndex + 3];
+                const value = isNaN(wordsInLine[varIndex + 3]) ? wordsInLine[varIndex + 3] : parseFloat(wordsInLine[varIndex + 3]);
                 variables[varName] = value;
                 console.log(`new var ${varName} = ${value}`);
             }
@@ -96,5 +99,17 @@ function processVarDeclaration(line) {
     }
 }
 
-const filePath = 'testing.vs'; // Replace with your actual file path
+function performOperation(operation, operand1, operand2) {
+    switch (operation) {
+        case 'add':
+            return operand1 + operand2;
+        case 'subtract':
+            return operand1 - operand2;
+        default:
+            console.log(`Unsupported operation: ${operation}`);
+            return null;
+    }
+}
+
+const filePath = 'testing.vs';
 processFile(filePath);

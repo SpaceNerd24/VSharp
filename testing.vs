@@ -1,8 +1,6 @@
 using System
 using System.Extras
 
-var Hello = World
-var World = Hello
-print World
-print Hello
-vijay
+var var1 = 2
+var var2 = 5
+add var2 var1
