@@ -12,6 +12,8 @@ function extractWordsFromLine(line) {
 }
 
 let variables = {}; // Store variable names and their values
+let usingSystem = false
+let usingSystemExtras = false;
 
 async function processFile(filePath) {
     try {
@@ -22,7 +24,7 @@ async function processFile(filePath) {
         });
 
         for await (const line of rl) {
-            if (line.includes('print')) {
+            if (line.includes('print') && usingSystem) {
                 const wordsInLine = extractWordsFromLine(line);
                 const printIndices = wordsInLine.reduce((indices, word, index) => {
                     if (word.toLowerCase() === 'print') {
@@ -43,16 +45,26 @@ async function processFile(filePath) {
                 });
             }
 
-            if (line.includes('var')) {
+            if (line.includes('var') && usingSystem) {
                 processVarDeclaration(line);
             }
 
-            if (line.includes('vijay')) {
+            if (line.includes('vijay') && usingSystemExtras) {
                 console.log("Vijay is a Great Person");
             }
 
+            if (line.includes('using System')) {
+                usingSystem = true;
+                console.log(filePath + ' is using system');
+            }
+
+            if (line.includes('using System.Extras')) {
+                usingSystemExtras = true;
+                console.log(filePath + ' is using system extras');
+            }
+
             // Stop searching the line when a semicolon is encountered
-            if (line.includes(';')) {
+            if (line.includes(';') && usingSystem) {
                 break;
             }
         }
